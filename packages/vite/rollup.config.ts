@@ -68,6 +68,18 @@ const sharedNodeOptions = defineConfig({
     format: 'esm',
     externalLiveBindings: false,
     freeze: false,
+    sourcemap: true,
+    sourcemapPathTransform: (relativeSourcePath, sourcemapPath) => {
+      // 获取每个模块的绝对路径
+      const absoluteSourcePath = path.resolve(
+        path.dirname(sourcemapPath),
+        relativeSourcePath,
+      )
+      console.log(absoluteSourcePath)
+
+      // 返回转换后的路径
+      return absoluteSourcePath
+    },
   },
   onwarn(warning, warn) {
     if (warning.message.includes('Circular dependency')) {
@@ -202,7 +214,7 @@ const moduleRunnerConfig = defineConfig({
   ],
   plugins: [
     ...createSharedNodePlugins({ esbuildOptions: { minifySyntax: true } }),
-    bundleSizeLimit(54),
+    bundleSizeLimit(55),
   ],
 })
 
@@ -327,7 +339,10 @@ const __require = __cjs_createRequire(import.meta.url);
       // inject after the last `import`
       s.appendRight(index, cjsPatch)
       console.log('patched cjs context: ' + chunk.fileName)
-      return s.toString()
+      return {
+        code: s.toString(),
+        map: s.generateMap({ hires: true }),
+      }
     },
   }
 }
